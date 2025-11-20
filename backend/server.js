@@ -8,70 +8,48 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-
-// Register new user
-app.post("/api/register", async (req, res) => {
+/* =============================================================
+   TEMP LOGIN (NO DATABASE)
+   Allows any user to log in during front-end development.
+   ============================================================= */
+app.post("/api/login", (req, res) => {
   const { user_id, password } = req.body;
-  console.log("Register request:", req.body);
 
   if (!user_id || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  try {
-    // Check if user exists
-    const [existing] = await pool.query("SELECT * FROM users WHERE user_id = ?", [user_id]);
-    if (existing.length > 0) {
-      console.log(" User already exists");
-      return res.status(400).json({ message: "User ID already exists" });
+  console.log("TEMP LOGIN SUCCESS for:", user_id);
+
+  return res.json({
+    message: "Login successful",
+    user: {
+      id: user_id,
+      name: "User " + user_id
     }
-
-    // Hash password and store
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (user_id, password) VALUES (?, ?)", [user_id, hashedPassword]);
-
-    console.log("User registered successfully");
-    res.status(201).json({ message: "Account created successfully" });
-  } catch (err) {
-    console.error(" Registration error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
+  });
 });
 
-//  Login existing user
-app.post("/api/login", async (req, res) => {
+/* =============================================================
+   TEMP REGISTER (NO DATABASE)
+   Always successful for now.
+   ============================================================= */
+app.post("/api/register", (req, res) => {
   const { user_id, password } = req.body;
-  console.log("Login request:", req.body);
 
   if (!user_id || !password) {
-    console.log("Missing credentials");
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  try {
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [user_id]);
-    console.log("DB result:", rows);
+  console.log("TEMP REGISTER created:", user_id);
 
-    if (rows.length === 0) {
-      console.log("User not found:", user_id);
-      return res.status(400).json({ message: "Invalid ID or Password" });
-    }
-
-    const user = rows[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match:", isMatch);
-
-    if (isMatch) {
-      console.log(" Login successful for", user_id);
-      res.json({ message: "Login successful" });
-    } else {
-      console.log(" Wrong password for", user_id);
-      res.status(400).json({ message: "Invalid ID or Password" });
-    }
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
+  return res.json({ message: "Account created successfully" });
 });
 
-app.listen(5000, () => console.log("Server running at http://localhost:5000"));
+
+/* =============================================================
+   START SERVER
+   ============================================================= */
+app.listen(5000, () => {
+  console.log("Server running on http://localhost:5000");
+});
